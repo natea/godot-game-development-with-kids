@@ -1,181 +1,98 @@
-# Godot Game Template
-For Godot 4.6 (4.3+ compatible)
+# Godot Game Development with Kids
 
-This template has a main menu, options menus, pause menu, credits, scene loader, extra tools, and an example game scene.  
+An AI-assisted approach to teaching kids game development using the Godot Engine and agentic coding tools.
 
-[Example on itch.io](https://maaack.itch.io/godot-game-template)  
+This project is based on [Maaack's Godot Game Template](https://github.com/Maaack/Godot-Game-Template), which provides a solid foundation with main menus, options, pause menus, credits, scene loaders, and an example game scene. See the [original template documentation](/addons/maaacks_game_template/docs/) for details on those features.
 
-[Featured Games](#featured-games)  
+## Getting Started with Agentic Game Development
 
-### Videos
+The idea is simple: your kid talks to an AI coding assistant in natural language, and the AI writes the game code while the Godot preview updates in real time.
 
-[![Quick Intro Video](https://img.youtube.com/vi/U9CB3vKINVw/hqdefault.jpg)](https://youtu.be/U9CB3vKINVw)  
-[More Videos](/addons/maaacks_game_template/docs/Videos.md)
+### Recommended Setup
 
-### Screenshots
-![Main Menu](/addons/maaacks_game_template/media/screenshot-6-main-menu-5.png)  
-![Key Rebinding](/addons/maaacks_game_template/media/screenshot-6-input-list-8.png)  
-![Audio Controls](/addons/maaacks_game_template/media/screenshot-6-audio-options-2.png)  
-![Video Controls](/addons/maaacks_game_template/media/screenshot-6-video-options-5.png)  
-![Pause Menu](/addons/maaacks_game_template/media/screenshot-6-pause-menu-3.png)  
-[More Screenshots](/addons/maaacks_game_template/docs/Screenshots.md)  
+For the best experience introducing kids to agentic game development:
 
-## Objective
+1. **Use [Cursor](https://cursor.sh/) or [Windsurf](https://codeium.com/windsurf)** as your code editor. These have a prominent chat window that will be the main way your kid interacts with the coding agent.
 
-Setup menus and accessibility features in about 15 minutes.
+2. **Split the screen 50/50** -- one half for the coding assistant's chat window, the other half for the Godot editor (especially the game preview). As your kid types commands to the AI, the Godot preview window updates to show the changes.
 
-The template can be the start of a new project, or plug into an existing one. It is game agnostic (2D or 3D) and can work with multiple target resolutions, up to 4k and down to 640x360. It's meant to cover the needs for a typical game jam, while remaining scalable and extensible enough to support commercial games.
+3. **Keep the Godot game preview visible** so kids get immediate visual feedback on what the AI is building for them.
 
-## Features
+## MCP Server for Godot (GDAI MCP)
 
-### Base
+This project uses the [MCP Server for Godot Game Engine (GDAI MCP)](https://gdaimcp.com/), which gives your AI coding assistant direct access to Godot's scene tree, nodes, and game state.
 
-The `base/` folder holds the core components of the menus application.
+**GDAI MCP is a commercial product and is not included in this repository.** To set it up:
 
--   Main Menu    
--   Options Menus
--   Pause Menu
--   Credits
--   Loading Screen
--   Opening Scene
--   Persistent Settings
--   Simple Config Interface
--   Extensible Overlay Menus
--   Keyboard/Mouse Support
--   Gamepad Support
--   UI Sound Controller
--   Background Music Controller
--   Credits Reader (Markdown File Parser)
--   Global State Management (Basic Saving/Loading)
--   Global Config Autoload
+1. Purchase and download GDAI MCP from [gdaimcp.com](https://gdaimcp.com/)
+2. Place it in the `addons/` directory of this project
+3. Open the project in Godot and enable the addon via **Project > Project Settings > Plugins**
+4. Configure your coding assistant to use the MCP server (see below)
 
-### Extras
+### Adding the MCP Server to Your Coding Assistant
 
-The `extras/` folder holds components that extend the core application.
+#### Claude Code
 
--   Level Loaders
--   Level Progress Manager
--   Win / Lose Manager
--   Script for Releasing on [itch.io](https://itch.io/) with [butler](https://itch.io/docs/butler/)
- 
-### Examples 
+Add the MCP server to your project settings in `.claude/settings.json`:
 
-The `examples/` folder contains an example project using inherited scenes from the `base/` and `extras/`.
+```json
+{
+  "mcpServers": {
+    "godot": {
+      "command": "path/to/gdai-mcp-server",
+      "args": []
+    }
+  }
+}
+```
 
--   Game Scene
--   Level Class & 3 Levels
--   Tutorial Windows & 3 Tutorial Messages
--   Win & Lose Windows
--   Master Options Menu
--   End Credits
--   Main Menu w/ Animations
--   Opening w/ Godot Logo
--   Game and Level State Management
+Or add it globally in `~/.claude/settings.json` to use across all projects.
 
-### Minimal
+#### Cursor
 
-Users that want a minimal set of features can try [Maaack's Minimal Game Template](https://github.com/Maaack/Godot-Minimal-Game-Template) or other options from the [plugin suite](/addons/maaacks_game_template/docs/PluginSuite.md).  
+Go to **Settings > MCP** and add a new server with the command and arguments for the GDAI MCP server.
 
+#### Windsurf
 
-## Installation
+Configure MCP servers in Windsurf's settings under the MCP section, pointing to the GDAI MCP server executable.
 
-### Godot Asset Library
-This package is available as both a template and a plugin, meaning it can be used to start a new project, or added to an existing project. 
+#### Other Assistants (Codex, Gemini, OpenCode, etc.)
 
-![Package Icon](/addons/maaacks_game_template/media/game-icon-black-transparent-256x256.png)  
+Most coding assistants that support MCP follow a similar pattern -- you provide the server command and arguments in the assistant's configuration file. Check your assistant's documentation for the specific MCP server configuration format.
 
-When starting a new project:
+## Godot Development Skill
 
-1.  Go to the `Asset Library Projects` tab.
-2.  Search for "Maaack's Game Template".
-3.  Click on the result to open the template details.
-4.  Click to Download.
-5.  Give the project a new name and destination.
-6.  Click to Install & Edit.
-7.  Continue with the [New Project Instructions](/addons/maaacks_game_template/docs/NewProject.md)
+This project includes a Godot development skill at `.claude/skills/godot/SKILL.md` that provides specialized knowledge of Godot's file formats (`.gd`, `.tscn`, `.tres`), architecture patterns, validation tools, code templates, and CLI workflows.
 
-When editing an existing project:
+The skill is designed for Claude Code but can be used with other AI coding assistants:
 
-1.  Go to the `AssetLib` tab.
-2.  Search for "Maaack's Game Template Plugin".
-3.  Click on the result to open the plugin details.
-4.  Click to Download.
-5.  Check that contents are getting installed to `addons/` and there are no conflicts.
-6.  Click to Install.
-7.  Reload the project (you may see errors before you do this).
-8.  Enable the plugin from the Project Settings > Plugins tab.  
-    If it's enabled for the first time,
-    1.  A dialogue window will appear asking to copy the example scenes out of `addons/`.
-    2.  Another dialogue window will ask to update the project's main scene.
-9.  Continue with the [Existing Project Instructions](/addons/maaacks_game_template/docs/ExistingProject.md)  
+- **Codex, Gemini, OpenCode, etc.** -- Copy the `.claude/skills/godot/` directory into your coding assistant's equivalent skills directory.
 
+This skill originated from the [terma project by Ben Follington](https://github.com/bfollington/terma/blob/4a88bbd3f0ae3ecb598023f29b4e848c1ec9113b/plugins/tsal/skills/godot/SKILL.md).
 
-### GitHub
+## Template Features
 
+This project inherits all features from [Maaack's Godot Game Template](https://github.com/Maaack/Godot-Game-Template):
 
-1.  Download the latest release version from [GitHub](https://github.com/Maaack/Godot-Game-Template/releases/latest).  
-2.  Extract the contents of the archive.
-3.  Move the `addons/maaacks_game_template` folder into your project's `addons/` folder.  
-4.  Open/Reload the project.  
-5.  Enable the plugin from the Project Settings > Plugins tab.  
-    If it's enabled for the first time,
-    1.  A dialogue window will appear asking to copy the example scenes out of `addons/`.
-    2.  Another dialogue window will ask to update the project's main scene.
-6.  Continue with the [Existing Project Instructions](/addons/maaacks_game_template/docs/ExistingProject.md) 
+- Main Menu, Options Menus, Pause Menu, Credits
+- Loading Screen, Opening Scene
+- Persistent Settings, Simple Config Interface
+- Keyboard/Mouse and Gamepad Support
+- UI Sound Controller, Background Music Controller
+- Level Loaders, Level Progress Manager
+- Win / Lose Manager
+- Example Game Scene with Levels and Tutorials
 
-
-## Usage
-
-### New Project
-These instructions assume starting with the entire contents of the project folder. This will be the case when cloning the repo, or starting from the *template* version in the Godot Asset Library.
-  
-
-[New Project Instructions](/addons/maaacks_game_template/docs/NewProject.md)
-
-### Existing Project
-
-These instructions assume starting with just the contents of `addons/`. This will be the case when installing the *plugin* version in the Godot Asset Library.
-
-[Existing Project Instructions](/addons/maaacks_game_template/docs/ExistingProject.md)  
-   
-### More Documentation
-
-[Main Menu Setup](/addons/maaacks_game_template/docs/MainMenuSetup.md)  
-[Game Scene Setup](/addons/maaacks_game_template/docs/GameSceneSetup.md)  
-[Loading Scenes](/addons/maaacks_game_template/docs/LoadingScenes.md)  
-[Input Icon Mapping](/addons/maaacks_game_template/docs/InputIconMapping.md)  
-[Joypad Inputs](/addons/maaacks_game_template/docs/JoypadInputs.md)  
-[Blending Music](/addons/maaacks_game_template/docs/BlendingMusic.md)  
-[Add UI Sound Effects](/addons/maaacks_game_template/docs/AddingUISFX.md)  
-[Add Custom Options](/addons/maaacks_game_template/docs/AddingCustomOptions.md)  
-[Game Saving](/addons/maaacks_game_template/docs/GameSaving.md)  
-[How Parts Work](/addons/maaacks_game_template/docs/HowPartsWork.md)  
-[Moving Files](/addons/maaacks_game_template/docs/MovingFiles.md)  
-[Uploading to itch.io](/addons/maaacks_game_template/docs/UploadingToItchIo.md)  
-[Build and Publish Your Game Using CICD](/addons/maaacks_game_template/docs/BuildAndPublish.md)  
-[Automatic Updating](/addons/maaacks_game_template/docs/AutomaticUpdating.md)  
-[Exhibiting Your Game](/addons/maaacks_game_template/docs/Exhibiting.md)  
-
----
-
-## Featured Games
-
-| Baking Godium | Spud Customs | Rent Seek Kill |  
-| :-------:| :-------: | :-------: |
-| ![Baking Godium](/addons/maaacks_game_template/media/thumbnail-game-baking-godium.png) | ![Spud Customs](/addons/maaacks_game_template/media/thumbnail-game-spud-customs.png) | ![Rent-Seek-Kill](/addons/maaacks_game_template/media/thumbnail-game-rent-seek-kill.png) |
-|  [Play on itch.io](https://maaack.itch.io/baking-godium) | [Find on Steam](https://store.steampowered.com/app/3291880/Spud_Customs/) | [Play on itch.io](https://xandruher.itch.io/rent-seek-kill)  |
-
-
-[All Shared Games](/addons/maaacks_game_template/docs/GamesMade.md)  
-
-
-## Community
-
-Join the [Discord server](https://discord.gg/AyZrJh5AMp ) and share your work with others. It's also a space for getting or giving feedback, and asking for help. 
- 
+See the [template documentation](/addons/maaacks_game_template/docs/) for full details.
 
 ## Links
-[Attribution](/addons/maaacks_game_template/ATTRIBUTION.md)  
-[License](/addons/maaacks_game_template/LICENSE.txt)  
-[Godot Asset Library - Template](https://godotengine.org/asset-library/asset/2703)  
-[Godot Asset Library - Plugin](https://godotengine.org/asset-library/asset/2709)  
+
+- [Maaack's Godot Game Template](https://github.com/Maaack/Godot-Game-Template) -- the base template this project is built on
+- [GDAI MCP](https://gdaimcp.com/) -- MCP Server for Godot Game Engine
+- [Godot Engine](https://godotengine.org/) -- the open-source game engine
+- [Terma Godot Skill](https://github.com/bfollington/terma/blob/4a88bbd3f0ae3ecb598023f29b4e848c1ec9113b/plugins/tsal/skills/godot/SKILL.md) -- origin of the included Godot skill
+
+## Attribution
+
+- Game template by [Maaack](https://github.com/Maaack/Godot-Game-Template) ([License](/addons/maaacks_game_template/LICENSE.txt))
+- Godot skill adapted from [terma](https://github.com/bfollington/terma) by Ben Follington
