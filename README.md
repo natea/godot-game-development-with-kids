@@ -36,6 +36,7 @@ This project uses the [MCP Server for Godot Game Engine (GDAI MCP)](https://gdai
 #### Claude Code
 
 Add the MCP server to your project settings in `.claude/settings.json`:
+Replace the `path/to/gdai-mcp-server` with the path in the Godot GDAI MCP settings screen (see above)
 
 ```json
 {
