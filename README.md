@@ -29,6 +29,8 @@ This project uses the [MCP Server for Godot Game Engine (GDAI MCP)](https://gdai
 3. Open the project in Godot and enable the addon via **Project > Project Settings > Plugins**
 4. Configure your coding assistant to use the MCP server (see below)
 
+<img width="2806" height="1966" alt="image" src="https://github.com/user-attachments/assets/64bdbc9a-1976-43ff-a6e5-ad3fde4620ae" />
+
 ### Adding the MCP Server to Your Coding Assistant
 
 #### Claude Code
