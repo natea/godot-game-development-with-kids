@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CCGS — System Architecture</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg:       #0a0a0a;
+  --bg1:      #111111;
+  --bg2:      #181818;
+  --border:   #252525;
+  --border2:  #333;
+  --text:     #f0f0f0;
+  --dim:      #555;
+  --mid:      #888;
+  --opus:     #ffb300;
+  --sonnet:   #00bcd4;
+  --haiku:    #9e9e9e;
+  --hitl:     #e91e63;
+  --skills:   #66bb6a;
+  --hooks:    #fb8c00;
+  --rules:    #ef5350;
+  --fabro:    #ab47bc;
+  --godot:    #478cbf;
+  --unity:    #222c37;
+  --unreal:   #313131;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'JetBrains Mono','Courier New',monospace;
+  font-size: 13px;
+  min-height: 100vh;
+}
+
+/* ── HEADER ───────────────────────────────────────────────── */
+header {
+  padding: 20px 32px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+header h1 {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+header p {
+  font-size: 11px;
+  color: var(--dim);
+  margin-bottom: 16px;
+}
+
+/* ── TABS ─────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 0;
+}
+
+.tab-btn {
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--dim);
+  font-family: inherit;
+  font-size: 12px;
+  letter-spacing: .08em;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: color .15s, border-color .15s;
+}
+
+.tab-btn:hover { color: var(--mid); }
+.tab-btn.active { color: var(--text); border-bottom-color: var(--text); }
+
+/* ── PANELS ───────────────────────────────────────────────── */
+.panel { display: none; padding: 32px; }
+.panel.active { display: block; }
+
+/* ── LEGEND ───────────────────────────────────────────────── */
+.legend {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--mid);
+}
+
+.legend-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── SECTION TITLE ────────────────────────────────────────── */
+.sec-title {
+  font-size: 10px;
+  letter-spacing: .15em;
+  color: var(--dim);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  margin-top: 32px;
+}
+
+.sec-title:first-child { margin-top: 0; }
+
+/* ────────────────────────────────────────────────────────── */
+/*  TAB 1 — OVERVIEW                                          */
+/* ────────────────────────────────────────────────────────── */
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  max-width: 900px;
+}
+
+.ov-cell {
+  background: var(--bg1);
+  padding: 20px 22px;
+}
+
+.ov-cell.span2 { grid-column: span 2; }
+.ov-cell.span3 { grid-column: span 3; }
+
+.ov-cell .ov-label {
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.ov-cell .ov-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.ov-cell .ov-body {
+  font-size: 11px;
+  color: var(--mid);
+  line-height: 1.8;
+}
+
+.ov-stat-row {
+  display: flex;
+  gap: 24px;
+  margin-top: 10px;
+}
+
+.ov-stat { text-align: center; }
+.ov-stat .n { font-size: 28px; font-weight: 700; line-height: 1; }
+.ov-stat .lbl { font-size: 10px; color: var(--dim); margin-top: 4px; letter-spacing: .08em; }
+
+.flow-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.flow-node {
+  padding: 5px 12px;
+  border-radius: 2px;
+  font-size: 11px;
+  letter-spacing: .05em;
+  border: 1px solid;
+}
+
+.flow-arrow { color: var(--dim); font-size: 14px; }
+
+.flow-node.fabro  { color: var(--fabro);  border-color: var(--fabro);  background: rgba(171,71,188,.08); }
+.flow-node.skills { color: var(--skills); border-color: var(--skills); background: rgba(102,187,106,.08); }
+.flow-node.agents { color: var(--sonnet); border-color: var(--sonnet); background: rgba(0,188,212,.08); }
+.flow-node.hooks  { color: var(--hooks);  border-color: var(--hooks);  background: rgba(251,140,0,.08); }
+.flow-node.rules  { color: var(--rules);  border-color: var(--rules);  background: rgba(239,83,80,.08); }
+.flow-node.files  { color: var(--dim);    border-color: var(--border2);background: var(--bg2); }
+.flow-node.user   { color: var(--opus);   border-color: var(--opus);   background: rgba(255,179,0,.08); }
+
+/* ────────────────────────────────────────────────────────── */
+/*  TAB 2 — AGENTS                                            */
+/* ────────────────────────────────────────────────────────── */
+
+.tier-label {
+  font-size: 10px;
+  letter-spacing: .15em;
+  color: var(--dim);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tier-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.agents-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.agent-card {
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 10px 14px;
+  min-width: 160px;
+  background: var(--bg1);
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  position: relative;
+}
+
+.agent-card:hover {
+  background: var(--bg2);
+  border-color: var(--border2);
+}
+
+.agent-card .a-name {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.agent-card .a-model {
+  font-size: 10px;
+  letter-spacing: .08em;
+}
+
+.agent-card .a-role {
+  font-size: 11px;
+  color: var(--mid);
+  margin-top: 5px;
+  line-height: 1.5;
+}
+
+.agent-card.opus   { border-left: 3px solid var(--opus);   }
+.agent-card.sonnet { border-left: 3px solid var(--sonnet); }
+.agent-card.haiku  { border-left: 3px solid var(--haiku);  }
+
+.a-model.opus   { color: var(--opus);   }
+.a-model.sonnet { color: var(--sonnet); }
+.a-model.haiku  { color: var(--haiku);  }
+
+.engine-section {
+  margin-top: 8px;
+}
+
+.engine-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.engine-tag {
+  font-size: 10px;
+  padding: 3px 10px;
+  border-radius: 2px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.engine-tag.godot   { color: var(--godot);   background: rgba(71,140,191,.1);  border: 1px solid rgba(71,140,191,.3);  }
+.engine-tag.unity   { color: #aaa;           background: rgba(255,255,255,.05); border: 1px solid var(--border2); }
+.engine-tag.unreal  { color: #d9534f;        background: rgba(217,83,79,.08);   border: 1px solid rgba(217,83,79,.3); }
+
+/* ────────────────────────────────────────────────────────── */
+/*  TAB 3 — WORKFLOW                                          */
+/* ────────────────────────────────────────────────────────── */
+
+.workflow-wrap {
+  overflow-x: auto;
+  padding-bottom: 16px;
+}
+
+svg.workflow { font-family: 'JetBrains Mono','Courier New',monospace; }
+
+/* ────────────────────────────────────────────────────────── */
+/*  TAB 4 — SKILLS                                            */
+/* ────────────────────────────────────────────────────────── */
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+
+.skill-group {
+  background: var(--bg1);
+  padding: 16px 18px;
+}
+
+.skill-group-title {
+  font-size: 10px;
+  color: var(--dim);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.skill-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.skill-item:last-child { border-bottom: none; }
+
+.skill-name {
+  font-size: 11px;
+  color: var(--skills);
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.skill-agent {
+  font-size: 10px;
+  color: var(--dim);
+}
+
+/* ────────────────────────────────────────────────────────── */
+/*  TAB 5 — HOOKS & RULES                                     */
+/* ────────────────────────────────────────────────────────── */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  max-width: 860px;
+  margin-bottom: 40px;
+}
+
+th {
+  text-align: left;
+  font-size: 10px;
+  letter-spacing: .12em;
+  color: var(--dim);
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  line-height: 1.6;
+  vertical-align: top;
+}
+
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg2); }
+
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-size: 10px;
+  letter-spacing: .06em;
+  white-space: nowrap;
+}
+
+.tag.hook  { color: var(--hooks); background: rgba(251,140,0,.1);  border: 1px solid rgba(251,140,0,.25); }
+.tag.rule  { color: var(--rules); background: rgba(239,83,80,.1);  border: 1px solid rgba(239,83,80,.25); }
+.tag.event { color: var(--sonnet);background: rgba(0,188,212,.08); border: 1px solid rgba(0,188,212,.2);  }
+
+/* ── DETAIL DRAWER ────────────────────────────────────────── */
+#detail-drawer {
+  position: fixed;
+  right: 0; top: 0; bottom: 0;
+  width: 320px;
+  background: var(--bg1);
+  border-left: 1px solid var(--border2);
+  padding: 24px;
+  transform: translateX(100%);
+  transition: transform .2s ease;
+  overflow-y: auto;
+  z-index: 200;
+}
+
+#detail-drawer.open { transform: translateX(0); }
+
+#drawer-close {
+  position: absolute;
+  top: 14px; right: 16px;
+  background: none; border: none;
+  color: var(--dim); font-size: 18px;
+  cursor: pointer; line-height: 1;
+}
+
+#drawer-close:hover { color: var(--text); }
+
+#drawer-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; margin-top: 4px; }
+#drawer-sub   { font-size: 11px; color: var(--mid); margin-bottom: 16px; }
+#drawer-body  { font-size: 12px; color: var(--mid); line-height: 1.8; }
+#drawer-body strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>CLAUDE CODE GAME STUDIOS — SYSTEM ARCHITECTURE</h1>
+  <p>49 agents · 72 skills · 12 hooks · 11 rules · 1 fabro workflow</p>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="overview">Overview</button>
+    <button class="tab-btn" data-tab="agents">Agent Hierarchy</button>
+    <button class="tab-btn" data-tab="workflow">Fabro Workflow</button>
+    <button class="tab-btn" data-tab="skills">Skills</button>
+    <button class="tab-btn" data-tab="hooks">Hooks &amp; Rules</button>
+  </nav>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--  TAB 1 — OVERVIEW                                          -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="panel active" id="tab-overview">
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--fabro)"></div>Fabro Workflow</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--opus)"></div>Opus (Directors)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--sonnet)"></div>Sonnet (Leads + Specialists)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--haiku)"></div>Haiku (Fast ops)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--skills)"></div>Skills (72)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--hooks)"></div>Hooks (12)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--rules)"></div>Rules (11)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--hitl)"></div>Human Gate</div>
+  </div>
+
+  <div class="overview-grid">
+
+    <!-- Row 1: User input -->
+    <div class="ov-cell span3">
+      <div class="ov-label" style="color:var(--opus)">Entry point</div>
+      <div class="flow-row">
+        <div class="flow-node user">USER / GOAL</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node fabro">fabro run workflow.toml --goal "..."</div>
+        <div class="flow-arrow">or</div>
+        <div class="flow-node user">claude (interactive session)</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node skills">/start  /brainstorm  /dev-story  …</div>
+      </div>
+    </div>
+
+    <!-- Row 2 col 1: Fabro pipeline -->
+    <div class="ov-cell">
+      <div class="ov-label" style="color:var(--fabro)">Fabro Workflow Engine</div>
+      <div class="ov-title" style="color:var(--fabro)">Automated Pipeline</div>
+      <div class="ov-body">
+        Orchestrates 11 nodes across 7 phases.<br>
+        Each node runs a Claude Code session with a specific prompt.<br>
+        Two human checkpoints (HITL) pause for your review.<br><br>
+        <strong style="color:var(--text)">Phases:</strong><br>
+        concept → systems_design → production_plan<br>
+        → pre_production → implement → qa → finalize
+      </div>
+    </div>
+
+    <!-- Row 2 col 2: Agent system -->
+    <div class="ov-cell">
+      <div class="ov-label" style="color:var(--sonnet)">Agent System</div>
+      <div class="ov-title" style="color:var(--sonnet)">49 Coordinated Agents</div>
+      <div class="ov-body">
+        Three tiers: Directors (Opus) → Leads (Sonnet) → Specialists (Sonnet/Haiku).<br><br>
+        Skills invoke agents. Agents delegate downward.<br>
+        Cross-domain decisions escalate upward.<br><br>
+        <strong style="color:var(--text)">Every task follows:</strong><br>
+        Ask → Options → Decide → Draft → Approve
+      </div>
+    </div>
+
+    <!-- Row 2 col 3: Stats -->
+    <div class="ov-cell">
+      <div class="ov-label" style="color:var(--text)">By the numbers</div>
+      <div class="ov-stat-row">
+        <div class="ov-stat"><div class="n" style="color:var(--opus)">3</div><div class="lbl">Directors</div></div>
+        <div class="ov-stat"><div class="n" style="color:var(--sonnet)">8</div><div class="lbl">Leads</div></div>
+        <div class="ov-stat"><div class="n" style="color:var(--haiku)">38</div><div class="lbl">Specialists</div></div>
+      </div>
+      <div class="ov-stat-row" style="margin-top:16px">
+        <div class="ov-stat"><div class="n" style="color:var(--skills)">72</div><div class="lbl">Skills</div></div>
+        <div class="ov-stat"><div class="n" style="color:var(--hooks)">12</div><div class="lbl">Hooks</div></div>
+        <div class="ov-stat"><div class="n" style="color:var(--rules)">11</div><div class="lbl">Rules</div></div>
+      </div>
+    </div>
+
+    <!-- Row 3: Skills, Hooks, Rules -->
+    <div class="ov-cell">
+      <div class="ov-label" style="color:var(--skills)">Skills Layer</div>
+      <div class="ov-title" style="color:var(--skills)">72 Slash Commands</div>
+      <div class="ov-body">
+        User-invocable via <code>/skill-name</code> in Claude Code.<br>
+        Each skill is a structured prompt that invokes the right agent(s).<br><br>
+        <strong style="color:var(--text)">Categories:</strong>
+        Onboarding, Design, Architecture, Stories, Reviews, QA, Production, Release, Team Orchestration
+      </div>
+    </div>
+
+    <div class="ov-cell">
+      <div class="ov-label" style="color:var(--hooks)">Hooks Layer</div>
+      <div class="ov-title" style="color:var(--hooks)">12 Automated Guards</div>
+      <div class="ov-body">
+        Shell scripts that fire automatically on Claude Code events.<br><br>
+        <strong style="color:var(--text)">Events watched:</strong><br>
+        SessionStart, PreToolUse (git commit/push),<br>
+        PostToolUse (Write/Edit on assets/ or skills/),<br>
+        PreCompact, PostCompact, Stop,<br>
+        SubagentStart, SubagentStop, Notification
+      </div>
+    </div>
+
+    <div class="ov-cell">
+      <div class="ov-label" style="color:var(--rules)">Rules Layer</div>
+      <div class="ov-title" style="color:var(--rules)">11 Path-Scoped Standards</div>
+      <div class="ov-body">
+        Markdown files enforced by path glob.<br>
+        Injected into context when editing matching files.<br><br>
+        <strong style="color:var(--text)">Paths covered:</strong><br>
+        src/gameplay/** · src/engine/** · src/ai/**<br>
+        src/network/** · src/ui/** · assets/shaders/**<br>
+        design/gdd/** · design/narrative/**<br>
+        prototypes/** · tests/** · assets/data/**
+      </div>
+    </div>
+
+    <!-- Row 4: System interaction summary -->
+    <div class="ov-cell span3" style="background:var(--bg2)">
+      <div class="ov-label">Full interaction chain</div>
+      <div class="flow-row">
+        <div class="flow-node user">Goal</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node fabro">Fabro Workflow</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node skills">Skills (/brainstorm, /dev-story…)</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node agents">Agents (game-designer, lead-programmer…)</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node files">Project Files</div>
+      </div>
+      <div class="flow-row" style="margin-top:10px">
+        <div class="flow-node hooks">Hooks</div>
+        <div class="flow-arrow">monitor every</div>
+        <div class="flow-node files">Write / Edit / Commit / Push / Session event</div>
+        <span style="color:var(--dim);font-size:11px;margin-left:8px">→ validate, warn, audit trail</span>
+      </div>
+      <div class="flow-row" style="margin-top:10px">
+        <div class="flow-node rules">Rules</div>
+        <div class="flow-arrow">injected when editing</div>
+        <div class="flow-node files">src/** · design/** · tests/** · assets/**</div>
+        <span style="color:var(--dim);font-size:11px;margin-left:8px">→ enforce coding + design standards</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--  TAB 2 — AGENTS                                           -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="panel" id="tab-agents">
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--opus)"></div>Opus model — Directors</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--sonnet)"></div>Sonnet model — Leads &amp; most Specialists</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--haiku)"></div>Haiku model — Fast ops</div>
+    <div class="legend-item" style="color:var(--dim);font-size:11px">Click any card for details</div>
+  </div>
+
+  <div class="tier-label">Tier 1 — Directors (Opus) · report to: You</div>
+  <div class="agents-row" id="tier1-agents"></div>
+
+  <div class="tier-label">Tier 2 — Department Leads (Sonnet) · report to: Directors</div>
+  <div class="agents-row" id="tier2-agents"></div>
+
+  <div class="tier-label">Tier 3 — Specialists (Sonnet / Haiku) · report to: Leads</div>
+  <div class="agents-row" id="tier3-agents"></div>
+
+  <div class="tier-label" style="margin-top:32px">Engine Specialists · report to: technical-director via engine lead</div>
+  <div style="margin-bottom:10px"><span class="engine-tag godot">Godot 4</span></div>
+  <div class="engine-group" id="godot-agents"></div>
+  <div style="margin-bottom:10px;margin-top:12px"><span class="engine-tag unity">Unity</span></div>
+  <div class="engine-group" id="unity-agents"></div>
+  <div style="margin-bottom:10px;margin-top:12px"><span class="engine-tag unreal">Unreal Engine 5</span></div>
+  <div class="engine-group" id="unreal-agents"></div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--  TAB 3 — WORKFLOW                                         -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="panel" id="tab-workflow">
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--opus)"></div>Opus node</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--sonnet)"></div>Sonnet node</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--haiku)"></div>Haiku node</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--hitl)"></div>Human checkpoint (HITL)</div>
+    <div class="legend-item" style="color:var(--dim);font-size:11px">Run with: <code>fabro run .fabro/workflows/game-studio/workflow.toml --goal "..."</code></div>
+  </div>
+
+  <div class="workflow-wrap">
+    <svg class="workflow" id="workflow-svg" width="860" height="760"></svg>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--  TAB 4 — SKILLS                                           -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="panel" id="tab-skills">
+  <div class="skills-grid" id="skills-grid"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!--  TAB 5 — HOOKS & RULES                                    -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="panel" id="tab-hooks">
+
+  <div class="sec-title">12 Hooks — Automated shell scripts fired by Claude Code events</div>
+  <table>
+    <thead><tr><th>Hook</th><th>Event trigger</th><th>What it does</th></tr></thead>
+    <tbody id="hooks-tbody"></tbody>
+  </table>
+
+  <div class="sec-title">11 Rules — Path-scoped coding &amp; design standards</div>
+  <table>
+    <thead><tr><th>Rule</th><th>Applies to path</th><th>Key standards enforced</th></tr></thead>
+    <tbody id="rules-tbody"></tbody>
+  </table>
+
+</div>
+
+<!-- Detail drawer -->
+<div id="detail-drawer">
+  <button id="drawer-close">✕</button>
+  <div id="drawer-title"></div>
+  <div id="drawer-sub"></div>
+  <div id="drawer-body"></div>
+</div>
+
+<script>
+'use strict';
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ── Detail drawer ─────────────────────────────────────────────────────────────
+const drawer = document.getElementById('detail-drawer');
+document.getElementById('drawer-close').addEventListener('click', function() {
+  drawer.classList.remove('open');
+});
+
+function openDrawer(title, sub, body) {
+  document.getElementById('drawer-title').textContent = title;
+  document.getElementById('drawer-sub').textContent   = sub;
+  document.getElementById('drawer-body').innerHTML    = body;
+  drawer.classList.add('open');
+}
+
+// ── Agent data ────────────────────────────────────────────────────────────────
+const AGENTS = {
+  tier1: [
+    { name:'producer',         model:'opus', role:'Production management, sprint planning, cross-department coordination, milestone tracking',
+      delegates:'All leads', escalate:'—', detail:'Coordinates all departments. Manages sprint capacity, risk, and change propagation. Every cross-domain decision routes through producer.' },
+    { name:'creative-director',model:'opus', role:'Creative vision, aesthetic direction, pillar conflicts, tone',
+      delegates:'game-designer, art-director, audio-director, narrative-director', escalate:'—', detail:'Guards the creative vision. Resolves conflicts between design and art. Approves major mechanic or aesthetic changes.' },
+    { name:'technical-director',model:'opus',role:'Architecture, technology choices, performance strategy',
+      delegates:'lead-programmer, devops-engineer, performance-analyst, technical-artist', escalate:'—', detail:'Owns all technical decisions. Approves ADRs, sets coding standards, chooses engine and toolchain.' },
+  ],
+  tier2: [
+    { name:'game-designer',    model:'sonnet', role:'Mechanics, systems, progression, economy, balancing',
+      delegates:'systems-designer, level-designer, economy-designer', escalate:'creative-director' },
+    { name:'lead-programmer',  model:'sonnet', role:'Code architecture, API design, refactoring strategy',
+      delegates:'gameplay-, engine-, ai-, network-, tools-, ui-programmer', escalate:'technical-director' },
+    { name:'art-director',     model:'sonnet', role:'Visual identity, style guides, asset standards',
+      delegates:'technical-artist, ux-designer', escalate:'creative-director' },
+    { name:'audio-director',   model:'sonnet', role:'Music direction, sound palette, audio implementation',
+      delegates:'sound-designer', escalate:'creative-director' },
+    { name:'narrative-director',model:'sonnet',role:'Story arcs, world-building, character design, dialogue',
+      delegates:'writer, world-builder', escalate:'creative-director' },
+    { name:'qa-lead',          model:'sonnet', role:'Test strategy, bug triage, release readiness',
+      delegates:'qa-tester', escalate:'producer' },
+    { name:'release-manager',  model:'sonnet', role:'Release pipeline, versioning, deployment, certification',
+      delegates:'devops-engineer', escalate:'producer' },
+    { name:'localization-lead',model:'sonnet', role:'Internationalization, string externalization, translation',
+      delegates:'—', escalate:'producer' },
+  ],
+  tier3: [
+    { name:'systems-designer',   model:'sonnet', role:'Formula design, interaction matrices, subsystem mechanics' },
+    { name:'level-designer',     model:'sonnet', role:'Level layouts, pacing, encounter design' },
+    { name:'economy-designer',   model:'sonnet', role:'Resource economies, loot tables, progression curves' },
+    { name:'gameplay-programmer',model:'sonnet', role:'Feature implementation, gameplay systems code' },
+    { name:'engine-programmer',  model:'sonnet', role:'Core engine, rendering, physics, memory' },
+    { name:'ai-programmer',      model:'sonnet', role:'Behavior trees, pathfinding, NPC logic' },
+    { name:'network-programmer', model:'sonnet', role:'Netcode, replication, lag compensation' },
+    { name:'tools-programmer',   model:'sonnet', role:'Editor extensions, pipeline tooling' },
+    { name:'ui-programmer',      model:'sonnet', role:'UI framework, screens, widgets, data binding' },
+    { name:'technical-artist',   model:'sonnet', role:'Shaders, VFX, optimization, art pipeline' },
+    { name:'ux-designer',        model:'sonnet', role:'User flows, wireframes, accessibility, input' },
+    { name:'writer',             model:'sonnet', role:'Dialogue, lore entries, item descriptions' },
+    { name:'world-builder',      model:'sonnet', role:'World rules, faction design, history, geography' },
+    { name:'prototyper',         model:'sonnet', role:'Rapid throwaway prototypes, mechanic testing' },
+    { name:'performance-analyst',model:'sonnet', role:'Profiling, optimization, memory analysis' },
+    { name:'analytics-engineer', model:'sonnet', role:'Event tracking, dashboards, A/B test design' },
+    { name:'security-engineer',  model:'sonnet', role:'Anti-cheat, exploit prevention, network security' },
+    { name:'live-ops-designer',  model:'sonnet', role:'Seasons, events, battle passes, retention' },
+    { name:'sound-designer',     model:'haiku',  role:'SFX design docs, audio event lists, mixing notes' },
+    { name:'qa-tester',          model:'sonnet', role:'Test execution, bug reports, test checklists' },
+    { name:'devops-engineer',    model:'haiku',  role:'CI/CD, build scripts, version control workflow' },
+    { name:'accessibility-specialist',model:'haiku',role:'WCAG compliance, colorblind modes, remapping' },
+    { name:'community-manager',  model:'haiku',  role:'Patch notes, player feedback, crisis comms' },
+  ],
+  godot: [
+    { name:'godot-specialist',        model:'sonnet', role:'Godot 4 lead: GDScript, node/scene, signals' },
+    { name:'godot-gdscript-specialist',model:'sonnet',role:'GDScript, static typing, design patterns' },
+    { name:'godot-shader-specialist', model:'sonnet', role:'Godot shading language, visual shaders, particles' },
+    { name:'godot-gdextension-specialist',model:'sonnet',role:'C++/Rust bindings, native performance' },
+    { name:'godot-csharp-specialist', model:'sonnet', role:'C# in Godot, interop with GDExtension' },
+  ],
+  unity: [
+    { name:'unity-specialist',        model:'sonnet', role:'Unity lead: MonoBehaviour/DOTS, Addressables' },
+    { name:'unity-dots-specialist',   model:'sonnet', role:'DOTS/ECS, Jobs, Burst, hybrid renderer' },
+    { name:'unity-shader-specialist', model:'sonnet', role:'Shader Graph, VFX Graph, URP/HDRP' },
+    { name:'unity-addressables-specialist',model:'sonnet',role:'Asset management, async loading, bundles' },
+    { name:'unity-ui-specialist',     model:'sonnet', role:'UI Toolkit, UGUI, UXML/USS, data binding' },
+  ],
+  unreal: [
+    { name:'unreal-specialist',       model:'sonnet', role:'UE5 lead: Blueprint/C++, GAS overview' },
+    { name:'ue-gas-specialist',       model:'sonnet', role:'Gameplay Ability System, abilities, effects' },
+    { name:'ue-blueprint-specialist', model:'sonnet', role:'Blueprint architecture, BP/C++ boundary' },
+    { name:'ue-replication-specialist',model:'sonnet',role:'Networking, replication, RPCs, prediction' },
+    { name:'ue-umg-specialist',       model:'sonnet', role:'UMG/CommonUI, widget hierarchy, data binding' },
+  ],
+};
+
+function makeAgentCard(a) {
+  const card = document.createElement('div');
+  card.className = 'agent-card ' + a.model;
+  card.innerHTML = `
+    <div class="a-name">${a.name}</div>
+    <div class="a-model ${a.model}">${a.model.toUpperCase()}</div>
+    <div class="a-role">${a.role}</div>
+  `;
+  card.addEventListener('click', function() {
+    const body = `
+      <strong>Model:</strong> ${a.model}<br><br>
+      <strong>Role:</strong> ${a.role}<br><br>
+      ${a.delegates ? '<strong>Delegates to:</strong> ' + a.delegates + '<br><br>' : ''}
+      ${a.escalate && a.escalate !== '—' ? '<strong>Escalates to:</strong> ' + a.escalate + '<br><br>' : ''}
+      ${a.detail ? a.detail : ''}
+    `;
+    openDrawer(a.name, a.model + ' · ' + (a.delegates ? 'manages team' : 'specialist'), body);
+  });
+  return card;
+}
+
+['tier1','tier2','tier3','godot','unity','unreal'].forEach(function(tier) {
+  const container = document.getElementById(tier + '-agents');
+  if (!container) return;
+  AGENTS[tier].forEach(function(a) { container.appendChild(makeAgentCard(a)); });
+});
+
+// ── Workflow SVG ──────────────────────────────────────────────────────────────
+(function drawWorkflow() {
+  const svg = document.getElementById('workflow-svg');
+  const NS  = 'http://www.w3.org/2000/svg';
+
+  function el(tag, attrs) {
+    const e = document.createElementNS(NS, tag);
+    Object.entries(attrs).forEach(function([k,v]) { e.setAttribute(k, v); });
+    return e;
+  }
+
+  function text(x, y, txt, attrs) {
+    const t = el('text', Object.assign({ x, y, 'text-anchor':'middle', 'dominant-baseline':'middle', fill:'#f0f0f0', 'font-size':'11', 'font-family':"'JetBrains Mono','Courier New',monospace" }, attrs));
+    t.textContent = txt;
+    return t;
+  }
+
+  function rect(x, y, w, h, rx, fill, stroke) {
+    return el('rect', { x, y, width:w, height:h, rx, fill, stroke, 'stroke-width':'1' });
+  }
+
+  // Arrow marker
+  const defs = el('defs', {});
+  const marker = el('marker', { id:'arrowhead', markerWidth:'8', markerHeight:'6', refX:'8', refY:'3', orient:'auto' });
+  marker.appendChild(el('polygon', { points:'0 0, 8 3, 0 6', fill:'#444' }));
+  defs.appendChild(marker);
+  svg.appendChild(defs);
+
+  function arrow(x1, y1, x2, y2, label, color) {
+    const line = el('line', { x1, y1, x2, y2, stroke: color||'#444', 'stroke-width':'1.5', 'marker-end':'url(#arrowhead)' });
+    svg.appendChild(line);
+    if (label) {
+      const lx = (x1+x2)/2, ly = (y1+y2)/2;
+      const bg = rect(lx-22, ly-8, 44, 16, 2, '#0a0a0a', 'none');
+      svg.appendChild(bg);
+      svg.appendChild(text(lx, ly, label, { fill:'#666', 'font-size':'10' }));
+    }
+  }
+
+  function curvedArrow(x1, y1, x2, y2, cx, cy, label, color) {
+    const path = el('path', {
+      d: `M${x1},${y1} Q${cx},${cy} ${x2},${y2}`,
+      fill: 'none', stroke: color||'#444', 'stroke-width':'1.5', 'marker-end':'url(#arrowhead)'
+    });
+    svg.appendChild(path);
+    if (label) {
+      svg.appendChild(text(cx, cy - 10, label, { fill:'#666', 'font-size':'10' }));
+    }
+  }
+
+  // Node helper
+  function node(x, y, label, sublabel, modelColor, isHitl) {
+    const w = 150, h = isHitl ? 44 : 52, cx = x + w/2, cy = y + h/2;
+
+    if (isHitl) {
+      // Hexagon shape for HITL
+      const hw = w/2, hh = h/2;
+      const pts = [
+        [cx - hw, cy],
+        [cx - hw + 14, cy - hh],
+        [cx + hw - 14, cy - hh],
+        [cx + hw, cy],
+        [cx + hw - 14, cy + hh],
+        [cx - hw + 14, cy + hh],
+      ].map(function(p) { return p[0]+','+p[1]; }).join(' ');
+      svg.appendChild(el('polygon', { points:pts, fill:'rgba(233,30,99,.12)', stroke:'var(--hitl)', 'stroke-width':'1.5' }));
+    } else {
+      svg.appendChild(rect(x, y, w, h, 3, 'rgba(0,0,0,0)', modelColor));
+    }
+
+    svg.appendChild(text(cx, cy - (sublabel ? 8 : 0), label, { fill:isHitl ? '#e91e63' : '#f0f0f0', 'font-weight':'700', 'font-size': isHitl ? '12' : '12' }));
+    if (sublabel) {
+      svg.appendChild(text(cx, cy + 10, sublabel, { fill:'#666', 'font-size':'10' }));
+    }
+    return { x, y, w, h, cx, cy };
+  }
+
+  const OPUS   = 'rgba(255,179,0,.2)';
+  const SONNET = 'rgba(0,188,212,.15)';
+  const HAIKU  = 'rgba(158,158,158,.15)';
+  const OPUS_S = 'rgba(255,179,0,.7)';
+  const SON_S  = 'rgba(0,188,212,.6)';
+  const HAI_S  = 'rgba(158,158,158,.5)';
+
+  // ── Column layout: two columns, branching logic ──
+  // Left column (main flow): x=40
+  // Right column (branches): x=240
+
+  const COL1 = 40, COL2 = 240, COL3 = 440;
+
+  // Nodes
+  const nStart         = node(COL1,  20,  'START',          '', 'rgba(255,255,255,.2)');
+  const nConcept       = node(COL1,  90,  'concept',        'Opus · high reasoning', OPUS_S);
+  const nSystems       = node(COL1, 170,  'systems_design', 'Opus · high reasoning', OPUS_S);
+  const nPlan          = node(COL1, 250,  'production_plan','Sonnet', SON_S);
+  const nPlanReview    = node(COL1, 330,  'plan_review',    'HITL #1 — You review PLAN.md', null, true);
+  const nRevisePlan    = node(COL3, 330,  'revise_plan',    'Opus · max 3 rounds', OPUS_S);
+  const nPreProd       = node(COL1, 420,  'pre_production', 'Sonnet', SON_S);
+  const nImplement     = node(COL1, 500,  'implement',      'Sonnet', SON_S);
+  const nQA            = node(COL1, 580,  'qa',             'Sonnet', SON_S);
+  const nReviewSum     = node(COL1, 660,  'review_summary', 'Haiku · fast', HAI_S);
+  const nImplReview    = node(COL1, 720,  'impl_review',    'HITL #2 — You review REVIEW.md', null, true);  // moved lower
+  const nIterate       = node(COL3, 640,  'iterate',        'Sonnet · max 3 rounds', SON_S);
+  const nFinalize      = node(COL2, 720,  'finalize',       'Sonnet', SON_S);
+
+  // Resize SVG
+  svg.setAttribute('height', '820');
+  svg.setAttribute('width',  '660');
+
+  // Main flow arrows
+  arrow(nStart.cx,      nStart.cy+14,  nConcept.cx,     nConcept.y);
+  arrow(nConcept.cx,    nConcept.y+52, nSystems.cx,     nSystems.y);
+  arrow(nSystems.cx,    nSystems.y+52, nPlan.cx,        nPlan.y);
+  arrow(nPlan.cx,       nPlan.y+52,    nPlanReview.cx,  nPlanReview.y);
+  // plan_review → pre_production (Approve)
+  arrow(nPlanReview.cx, nPlanReview.cy+22, nPreProd.cx, nPreProd.y, 'Approve', '#66bb6a');
+  // plan_review → revise_plan (Revise)
+  arrow(nPlanReview.cx+75, nPlanReview.cy, nRevisePlan.x, nRevisePlan.cy, 'Revise', '#ffb300');
+  // revise_plan → plan_review (loop back)
+  curvedArrow(nRevisePlan.x, nRevisePlan.cy, nPlanReview.cx+75, nPlanReview.cy, 490, 280, '↩ loop', '#ffb300');
+
+  arrow(nPreProd.cx,    nPreProd.y+52,  nImplement.cx,   nImplement.y);
+  arrow(nImplement.cx,  nImplement.y+52,nQA.cx,          nQA.y);
+  arrow(nQA.cx,         nQA.y+52,       nReviewSum.cx,   nReviewSum.y);
+  arrow(nReviewSum.cx,  nReviewSum.y+52,nImplReview.cx,  nImplReview.y);
+
+  // impl_review → finalize (Approve)
+  arrow(nImplReview.cx - 40, nImplReview.cy+22, nFinalize.cx, nFinalize.y, 'Approve', '#66bb6a');
+  // impl_review → iterate (Feedback)
+  arrow(nImplReview.cx+75,   nImplReview.cy,    nIterate.x,   nIterate.cy, 'Feedback', '#ffb300');
+  // iterate → qa (loop back)
+  curvedArrow(nIterate.x, nIterate.cy, nQA.cx + 75, nQA.cy, 580, 580, '↩ loop', '#ffb300');
+
+  // Abort/Exit labels
+  svg.appendChild(text(nPlanReview.cx - 85, nPlanReview.cy + 36, '✕ Abort → exit', { fill:'#555', 'font-size':'10' }));
+  svg.appendChild(text(nImplReview.cx - 85, nImplReview.cy + 36, '✕ Ship → exit', { fill:'#555', 'font-size':'10' }));
+
+  // Model legend on right
+  [
+    [580, 100, 'Opus', '#ffb300',   OPUS],
+    [580, 135, 'Sonnet','#00bcd4',  SONNET],
+    [580, 170, 'Haiku', '#9e9e9e',  HAIKU],
+    [580, 205, 'HITL',  '#e91e63',  'rgba(233,30,99,.12)'],
+  ].forEach(function(r) {
+    svg.appendChild(rect(r[0], r[1]-10, 12, 12, 2, r[4], r[3]));
+    svg.appendChild(text(r[0]+20, r[1]-4, r[2], { 'text-anchor':'start', fill:'#666', 'font-size':'11' }));
+  });
+})();
+
+// ── Skills data ───────────────────────────────────────────────────────────────
+const SKILL_GROUPS = [
+  { title:'Onboarding & Navigation', skills:[
+    ['/start',                'producer'],
+    ['/help',                 'any'],
+    ['/project-stage-detect', 'producer'],
+    ['/setup-engine',         'technical-director'],
+    ['/adopt',                'cross-tool'],
+    ['/onboard',              'producer'],
+  ]},
+  { title:'Game Design', skills:[
+    ['/brainstorm',            'game-designer + creative-director'],
+    ['/map-systems',           'systems-designer'],
+    ['/design-system',         'game-designer'],
+    ['/quick-design',          'game-designer'],
+    ['/review-all-gdds',       'creative-director'],
+    ['/propagate-design-change','game-designer'],
+    ['/balance-check',         'game-designer'],
+  ]},
+  { title:'Art & UX', skills:[
+    ['/art-bible',    'art-director'],
+    ['/asset-spec',   'art-director'],
+    ['/asset-audit',  'art-director'],
+    ['/ux-design',    'ux-designer'],
+    ['/ux-review',    'ux-designer'],
+  ]},
+  { title:'Architecture', skills:[
+    ['/create-architecture',    'technical-director'],
+    ['/architecture-decision',  'lead-programmer'],
+    ['/architecture-review',    'technical-director'],
+    ['/create-control-manifest','lead-programmer'],
+  ]},
+  { title:'Stories & Sprints', skills:[
+    ['/create-epics',    'producer + game-designer'],
+    ['/create-stories',  'producer + game-designer'],
+    ['/dev-story',       'lead-programmer'],
+    ['/sprint-plan',     'producer'],
+    ['/sprint-status',   'producer'],
+    ['/story-readiness', 'producer'],
+    ['/story-done',      'producer'],
+    ['/estimate',        'producer'],
+  ]},
+  { title:'Reviews & Analysis', skills:[
+    ['/design-review',    'game-designer'],
+    ['/code-review',      'lead-programmer'],
+    ['/balance-check',    'game-designer'],
+    ['/content-audit',    'cross-tool'],
+    ['/scope-check',      'producer'],
+    ['/perf-profile',     'performance-analyst'],
+    ['/tech-debt',        'lead-programmer'],
+    ['/gate-check',       'meta'],
+    ['/consistency-check','cross-tool'],
+  ]},
+  { title:'QA & Testing', skills:[
+    ['/qa-plan',              'qa-lead'],
+    ['/smoke-check',          'qa-tester'],
+    ['/soak-test',            'qa-tester'],
+    ['/regression-suite',     'qa-tester'],
+    ['/test-setup',           'qa-tester'],
+    ['/test-helpers',         'qa-tester'],
+    ['/test-evidence-review', 'qa-lead'],
+    ['/test-flakiness',       'qa-tester'],
+    ['/playtest-report',      'qa-tester'],
+    ['/skill-test',           'meta'],
+    ['/skill-improve',        'meta'],
+  ]},
+  { title:'Production', skills:[
+    ['/milestone-review', 'producer'],
+    ['/retrospective',    'producer'],
+    ['/bug-report',       'qa-lead'],
+    ['/bug-triage',       'qa-lead'],
+    ['/reverse-document', 'cross-tool'],
+  ]},
+  { title:'Release', skills:[
+    ['/release-checklist','qa-lead + release-manager'],
+    ['/launch-checklist', 'release-manager'],
+    ['/changelog',        'release-manager'],
+    ['/patch-notes',      'release-manager'],
+    ['/hotfix',           'release-manager'],
+  ]},
+  { title:'Creative & Content', skills:[
+    ['/prototype', 'prototyper'],
+    ['/localize',  'localization-lead'],
+    ['/brainstorm','game-designer'],
+  ]},
+  { title:'Team Orchestration', skills:[
+    ['/team-combat',    'game-designer'],
+    ['/team-narrative', 'narrative-director'],
+    ['/team-ui',        'ui-programmer'],
+    ['/team-release',   'release-manager'],
+    ['/team-polish',    'cross-team'],
+    ['/team-audio',     'audio-director'],
+    ['/team-level',     'level-designer'],
+    ['/team-live-ops',  'live-ops-designer'],
+    ['/team-qa',        'qa-lead'],
+  ]},
+  { title:'Workflow Meta', skills:[
+    ['/fabro-create-workflow','technical-director'],
+  ]},
+];
+
+const skillsGrid = document.getElementById('skills-grid');
+SKILL_GROUPS.forEach(function(g) {
+  const div = document.createElement('div');
+  div.className = 'skill-group';
+  div.innerHTML = `<div class="skill-group-title">${g.title}</div>` +
+    g.skills.map(function(s) {
+      return `<div class="skill-item"><span class="skill-name">${s[0]}</span><span class="skill-agent">${s[1]}</span></div>`;
+    }).join('');
+  skillsGrid.appendChild(div);
+});
+
+// ── Hooks data ────────────────────────────────────────────────────────────────
+const HOOKS = [
+  ['session-start.sh',       'SessionStart',          'Load sprint context, milestone, git activity; preview active session state'],
+  ['detect-gaps.sh',         'SessionStart',          'Detect fresh projects (suggest /start); flag missing design docs when code exists'],
+  ['validate-commit.sh',     'PreToolUse · git commit','Validate design doc sections, hardcoded values, TODO format, JSON validity'],
+  ['validate-push.sh',       'PreToolUse · git push', 'Warn on pushes to protected branches (develop/main)'],
+  ['validate-assets.sh',     'PostToolUse · Write/Edit (assets/)','Check asset naming conventions and JSON structure validity'],
+  ['validate-skill-change.sh','PostToolUse · Write/Edit (.claude/skills/)','Advise running /skill-test after any skill file change'],
+  ['pre-compact.sh',         'PreCompact',            'Dump session state (active.md, WIP design docs) before context compression'],
+  ['post-compact.sh',        'PostCompact',           'Remind Claude to restore session state from saved checkpoint'],
+  ['notify.sh',              'Notification',          'Show OS toast notification (Windows via PowerShell; graceful no-op on macOS)'],
+  ['log-agent.sh',           'SubagentStart',         'Audit trail — log subagent invocation with timestamp and name'],
+  ['log-agent-stop.sh',      'SubagentStop',          'Audit trail — complete subagent record with outcome'],
+  ['session-stop.sh',        'Stop',                  'Archive active.md to session log; summarize git activity and accomplishments'],
+];
+
+const hooksTbody = document.getElementById('hooks-tbody');
+HOOKS.forEach(function(h) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><span class="tag hook">${h[0]}</span></td>
+    <td><span class="tag event">${h[1]}</span></td>
+    <td style="color:var(--mid)">${h[2]}</td>
+  `;
+  hooksTbody.appendChild(tr);
+});
+
+// ── Rules data ────────────────────────────────────────────────────────────────
+const RULES = [
+  ['gameplay-code.md',  'src/gameplay/**',       'Values from config (never hardcoded), delta-time usage, no UI refs, explicit state machine transition tables, unit tests required'],
+  ['engine-code.md',    'src/engine/**',         'No game logic mixed in, DRY, dependency injection, performance budgets, frame-rate independence, memory management'],
+  ['ai-code.md',        'src/ai/**',             'Behavior tree structure, blackboards for shared state, debug visualization, update-frequency budgets'],
+  ['network-code.md',   'src/network/**',        'Server-authoritative, protocol version checks, bandwidth budgets, latency tolerance, desync recovery, anti-cheat hooks'],
+  ['ui-code.md',        'src/ui/**',             'Separation of logic and presentation, data binding patterns, responsive layout, no embedded game logic, accessibility'],
+  ['shader-code.md',    'assets/shaders/**',     'Performance budgets (ALU/TMU), document inputs/outputs, quality-level variants, proper error handling'],
+  ['prototype-code.md', 'prototypes/**',         'Throwaway code, no production patterns required, "do not ship" markers, rapid iteration over polish, README required'],
+  ['test-standards.md', 'tests/**',              'Unit tests for logic, integration tests for multi-system, visual regression screenshots, deterministic test data, naming conventions'],
+  ['design-docs.md',    'design/gdd/**',         '8 required sections, formulas with variable definitions, edge cases explicit, dependency bidirectionality, testable acceptance criteria'],
+  ['data-files.md',     'assets/data/**',        'YAML/JSON structure validation, version controlled (no binary), reference integrity (no broken asset links), schema documentation'],
+  ['narrative.md',      'design/narrative/**',   'Canon documentation, character voice guides, tone consistency, dialogue system integration, localization-friendly phrasing'],
+];
+
+const rulesTbody = document.getElementById('rules-tbody');
+RULES.forEach(function(r) {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><span class="tag rule">${r[0]}</span></td>
+    <td style="color:var(--sonnet);font-size:11px">${r[1]}</td>
+    <td style="color:var(--mid)">${r[2]}</td>
+  `;
+  rulesTbody.appendChild(tr);
+});
+</script>
+</body>
+</html>

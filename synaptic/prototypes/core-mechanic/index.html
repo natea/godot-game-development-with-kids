@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<!-- PROTOTYPE - NOT FOR PRODUCTION -->
+<!-- Question: Does the tap-measure-see 30-second loop feel interactive at browser precision? -->
+<!-- Date: 2026-04-12 -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Synaptic — Core Mechanic Prototype</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a0a;
+    --signal-white: #f0f0f0;
+    --neutral-text: #606060;
+    --neutral-mid: #303030;
+    --precision-cyan: #00bcd4;
+    --alert-amber: #ffb300;
+    --perf-fast: #e8d5b0;
+    --perf-slow: #b0c8e8;
+    --correct-green: #43a047;
+    --wrong-red: #e53935;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--signal-white);
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    user-select: none;
+    cursor: default;
+    overflow: hidden;
+  }
+
+  /* Progress bar - hairline top edge */
+  #progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 1px;
+    background: var(--neutral-mid);
+    width: 0%;
+    transition: none;
+    z-index: 100;
+  }
+
+  /* Phase label - top left */
+  #phase-label {
+    position: fixed;
+    top: 12px; left: 12px;
+    font-size: 10px;
+    color: var(--neutral-mid);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  /* Trial counter - top right */
+  #trial-counter {
+    position: fixed;
+    top: 12px; right: 12px;
+    font-size: 12px;
+    color: var(--neutral-text);
+    letter-spacing: 0.05em;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  /* Main viewport */
+  #viewport {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+  }
+
+  /* ── RT TEST ─────────────────────────────────────────────────────── */
+
+  #stimulus {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: var(--signal-white);
+    opacity: 0;
+    transition: none;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  #rt-display {
+    position: absolute;
+    top: calc(50% + 60px); left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #rt-value {
+    font-size: 48px; font-weight: 700;
+    color: var(--signal-white);
+    line-height: 1; display: block;
+  }
+
+  #rt-band {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 11px; color: var(--neutral-text);
+    margin-top: 4px; display: block;
+  }
+
+  #ring {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: 2px solid var(--precision-cyan);
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0; pointer-events: none;
+  }
+
+  @keyframes ring-expand {
+    0%   { transform: translate(-50%, -50%) scale(1);   opacity: 0.8; }
+    100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0;   }
+  }
+
+  #ring.animate { animation: ring-expand 0.12s ease-out forwards; }
+
+  #warning {
+    position: absolute;
+    top: calc(50% + 60px); left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 16px; font-weight: 500;
+    color: var(--alert-amber);
+    opacity: 0; pointer-events: none;
+    white-space: nowrap;
+  }
+
+  #instruction {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 16px; color: var(--neutral-text);
+    text-align: center;
+    position: absolute;
+    bottom: 80px; left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+
+  /* ── COLOR TEST ──────────────────────────────────────────────────── */
+
+  #color-test-area {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%; height: 100%;
+    position: relative;
+    gap: 0;
+  }
+
+  #color-stimulus {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    position: absolute;
+    top: calc(50% - 100px); left: 50%;
+    transform: translate(-50%, -50%);
+    transition: none;
+  }
+
+  #color-prompt {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 14px; color: var(--neutral-text);
+    position: absolute;
+    top: calc(50% - 40px); left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+
+  #color-feedback {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 13px;
+    position: absolute;
+    top: calc(50% + 100px); left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    white-space: nowrap;
+    pointer-events: none;
+    transition: opacity 0.15s;
+  }
+
+  .color-options {
+    position: absolute;
+    top: calc(50%); left: 50%;
+    transform: translate(-50%, -10px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .color-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: transparent;
+    border: 1px solid var(--neutral-mid);
+    border-radius: 2px;
+    cursor: pointer;
+    min-width: 100px;
+    transition: border-color 0.1s;
+  }
+
+  .color-btn:hover { border-color: #555; }
+
+  .color-btn .swatch {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+  }
+
+  .color-btn .color-name {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 12px; color: var(--neutral-text);
+    letter-spacing: 0.05em;
+  }
+
+  .color-btn.flash-correct {
+    border-color: var(--correct-green);
+    background: rgba(67, 160, 71, 0.1);
+  }
+
+  .color-btn.flash-wrong {
+    border-color: var(--wrong-red);
+    background: rgba(229, 57, 53, 0.1);
+  }
+
+  /* ── PHASE TRANSITION ────────────────────────────────────────────── */
+
+  #phase-transition {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+  }
+
+  #phase-transition .phase-title {
+    font-size: 13px; font-weight: 400;
+    color: var(--neutral-text);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  #phase-transition .phase-name {
+    font-size: 22px; font-weight: 700;
+    color: var(--signal-white);
+    letter-spacing: 0.1em;
+  }
+
+  #phase-transition .phase-desc {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 13px; color: var(--neutral-text);
+    max-width: 320px; line-height: 1.7;
+  }
+
+  #phase-transition .continue-btn {
+    margin-top: 8px;
+    padding: 10px 32px;
+    background: var(--signal-white);
+    border: none; color: #0a0a0a;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; border-radius: 2px;
+    letter-spacing: 0.05em;
+  }
+  #phase-transition .continue-btn:hover { background: #d8d8d8; }
+
+  /* ── RESULTS ─────────────────────────────────────────────────────── */
+
+  #results {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    text-align: center;
+    padding: 40px;
+    overflow-y: auto;
+    max-height: 100vh;
+  }
+
+  #results h2 {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 14px; font-weight: 400;
+    color: var(--neutral-text);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--neutral-mid);
+    border: 1px solid var(--neutral-mid);
+    border-radius: 2px;
+    overflow: hidden;
+    width: 100%;
+    max-width: 520px;
+  }
+
+  .results-panel {
+    background: var(--bg);
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .results-panel .panel-label {
+    font-size: 10px;
+    color: var(--neutral-text);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .results-panel .panel-value {
+    font-size: 42px; font-weight: 700;
+    line-height: 1;
+  }
+
+  .results-panel .panel-sub {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 11px; color: var(--neutral-text);
+  }
+
+  .results-panel .panel-finding {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 12px; color: var(--neutral-text);
+    line-height: 1.6; text-align: center;
+    margin-top: 4px;
+  }
+
+  .results-panel .panel-band {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 12px;
+    padding: 4px 12px;
+    border: 1px solid var(--neutral-mid);
+    border-radius: 2px;
+    letter-spacing: 0.08em;
+  }
+
+  #results .trial-list {
+    font-size: 10px; color: var(--neutral-text);
+    line-height: 2; text-align: left;
+    max-width: 520px; width: 100%;
+  }
+
+  .trial-row { display: flex; gap: 8px; align-items: center; }
+  .trial-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  #results .disclaimer {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 11px; color: var(--neutral-mid);
+    max-width: 400px; line-height: 1.6;
+  }
+
+  #results .retry-btn {
+    padding: 10px 32px;
+    background: transparent;
+    border: 1px solid var(--neutral-mid);
+    color: var(--neutral-text);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 13px; cursor: pointer;
+    border-radius: 2px; letter-spacing: 0.05em;
+  }
+  #results .retry-btn:hover {
+    border-color: var(--signal-white);
+    color: var(--signal-white);
+  }
+
+  /* ── START SCREEN ────────────────────────────────────────────────── */
+
+  #start-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    text-align: center;
+  }
+
+  #start-screen .title {
+    font-size: 24px; font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--signal-white);
+  }
+
+  #start-screen .subtitle {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 13px; color: var(--neutral-text);
+    max-width: 360px; line-height: 1.7;
+  }
+
+  .phases-row {
+    display: flex;
+    gap: 12px;
+    max-width: 400px;
+    width: 100%;
+  }
+
+  .phase-card {
+    flex: 1;
+    border: 1px solid var(--neutral-mid);
+    border-radius: 2px;
+    padding: 14px 16px;
+    text-align: left;
+  }
+
+  .phase-card .pc-num {
+    font-size: 10px; color: var(--neutral-mid);
+    letter-spacing: 0.1em; margin-bottom: 6px;
+  }
+
+  .phase-card .pc-name {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 13px; font-weight: 600;
+    color: var(--signal-white);
+    margin-bottom: 6px;
+  }
+
+  .phase-card .pc-desc {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 11px; color: var(--neutral-text);
+    line-height: 1.6;
+  }
+
+  #start-screen .instructions {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 13px; color: var(--neutral-text);
+    text-align: left; line-height: 2;
+    border: 1px solid var(--neutral-mid);
+    padding: 16px 24px; border-radius: 2px;
+    max-width: 400px; width: 100%;
+  }
+
+  #start-screen .instructions ol { padding-left: 18px; }
+  #start-screen .instructions li { margin-bottom: 2px; }
+
+  #start-screen .start-btn {
+    padding: 12px 40px;
+    background: var(--signal-white);
+    border: none; color: #0a0a0a;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 15px; font-weight: 600;
+    cursor: pointer; border-radius: 2px;
+    letter-spacing: 0.05em;
+  }
+  #start-screen .start-btn:hover { background: #d8d8d8; }
+
+  #start-screen .hint {
+    font-size: 12px; color: var(--neutral-text); opacity: 0.5;
+  }
+
+  /* Debug overlay */
+  #debug {
+    position: fixed; bottom: 12px; left: 12px;
+    font-size: 10px; color: #333;
+    line-height: 1.8; pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<div id="phase-label"></div>
+<div id="trial-counter"></div>
+
+<div id="viewport">
+
+  <!-- Start screen -->
+  <div id="start-screen">
+    <div class="title">SYNAPTIC</div>
+    <div class="subtitle">Two quick tests. Two minutes total.</div>
+
+    <div class="phases-row">
+      <div class="phase-card">
+        <div class="pc-num">PHASE 1</div>
+        <div class="pc-name">Reaction Time</div>
+        <div class="pc-desc">Click the moment a white circle appears. 10 trials. Measures your median RT in ms.</div>
+      </div>
+      <div class="phase-card">
+        <div class="pc-num">PHASE 2</div>
+        <div class="pc-name">Color Vision</div>
+        <div class="pc-desc">Identify the color of each circle. 10 trials. Screens for common color deficiencies.</div>
+      </div>
+    </div>
+
+    <div class="instructions">
+      <ol>
+        <li><strong>Phase 1</strong> — wait for the circle, then click or press any key immediately</li>
+        <li>Don't click early — you'll get a "Too early" penalty</li>
+        <li><strong>Phase 2</strong> — tap the button that names the circle's color</li>
+        <li>Results show your reaction time ranking and color vision findings</li>
+      </ol>
+    </div>
+
+    <button class="start-btn" id="start-btn">Start Test</button>
+    <div class="hint">Space or Enter to start</div>
+  </div>
+
+  <!-- RT test area -->
+  <div id="test-area" style="display:none; width:100%; height:100%; position:relative;">
+    <div id="stimulus"></div>
+    <div id="ring"></div>
+    <div id="rt-display">
+      <span id="rt-value">--</span>
+      <span id="rt-band">±5 ms</span>
+    </div>
+    <div id="warning">Too early</div>
+    <div id="instruction">Get ready...</div>
+  </div>
+
+  <!-- Phase transition screen -->
+  <div id="phase-transition">
+    <div class="phase-title">Up Next</div>
+    <div class="phase-name">COLOR VISION</div>
+    <div class="phase-desc">
+      A circle will appear in a color. Select its name from four choices.<br>
+      Answer based on what you actually see — there are no trick questions.
+    </div>
+    <button class="continue-btn" id="continue-btn">Begin Color Test</button>
+  </div>
+
+  <!-- Color test area -->
+  <div id="color-test-area">
+    <div id="color-stimulus"></div>
+    <div id="color-prompt">What color is this circle?</div>
+    <div class="color-options" id="color-options"></div>
+    <div id="color-feedback"></div>
+  </div>
+
+  <!-- Results screen -->
+  <div id="results">
+    <h2>Results</h2>
+
+    <div class="results-grid">
+      <div class="results-panel" id="rt-panel">
+        <div class="panel-label">Reaction Time</div>
+        <div class="panel-value" id="res-median">--</div>
+        <div class="panel-sub">median ms</div>
+        <div class="panel-band" id="res-band">--</div>
+        <div class="panel-finding" id="res-percentile">--</div>
+      </div>
+      <div class="results-panel" id="color-panel">
+        <div class="panel-label">Color Vision</div>
+        <div class="panel-value" id="res-color-score">--</div>
+        <div class="panel-sub">% correct</div>
+        <div class="panel-band" id="res-color-band">--</div>
+        <div class="panel-finding" id="res-color-finding">--</div>
+      </div>
+    </div>
+
+    <div class="trial-list" id="res-color-trials"></div>
+    <div class="disclaimer">Not a medical diagnostic. Results may vary with display calibration and ambient lighting.</div>
+    <button class="retry-btn" id="retry-btn">Test Again</button>
+  </div>
+
+</div>
+
+<!-- Debug overlay -->
+<div id="debug">
+  [PROTOTYPE] frame timing debug below<br>
+  <span id="dbg-state">state: idle</span><br>
+  <span id="dbg-last-rt">last RT: --</span><br>
+  <span id="dbg-precision">perf.now precision: checking...</span>
+</div>
+
+<script>
+'use strict';
+
+// ─── RT Constants ─────────────────────────────────────────────────────────────
+const TOTAL_TRIALS          = 10;
+const MIN_WAIT_MS           = 1000;
+const MAX_WAIT_MS           = 4000;
+const BROWSER_OFFSET_CORRECTION = 15;
+const RT_DISPLAY_LIFETIME_MS = 1500;
+const RT_DISPLAY_FADE_MS    = 200;
+const WARNING_LIFETIME_MS   = 500;
+
+const NORMS = [
+  { label: 'Elite',   labelText: 'Elite — top 5%',   max: 175,      interp: 'Faster than ~95% of adults' },
+  { label: 'Fast',    labelText: 'Fast — top 25%',    max: 225,      interp: 'Faster than ~75% of adults' },
+  { label: 'Average', labelText: 'Average',           max: 300,      interp: 'Faster than ~50% of adults' },
+  { label: 'Slow',    labelText: 'Slow — bottom 25%', max: 400,      interp: 'Faster than ~25% of adults' },
+  { label: 'Slow',    labelText: 'Slow — bottom 10%', max: Infinity, interp: 'Faster than ~10% of adults' },
+];
+
+// ─── Color Test Constants ─────────────────────────────────────────────────────
+const COLOR_TOTAL = 10;
+
+const PALETTE = {
+  'Red':    '#e53935',
+  'Green':  '#43a047',
+  'Blue':   '#1e88e5',
+  'Yellow': '#fdd835',
+  'Orange': '#fb8c00',
+  'Purple': '#8e24aa',
+  'Brown':  '#795548',
+  'Gray':   '#9e9e9e',
+};
+
+// Distractors are the colors a colorblind person would likely confuse the target with
+const COLOR_TRIALS_DEF = [
+  { name: 'Red',    distractors: ['Green',  'Brown',  'Orange'] },
+  { name: 'Green',  distractors: ['Red',    'Brown',  'Yellow'] },
+  { name: 'Blue',   distractors: ['Purple', 'Green',  'Gray'  ] },
+  { name: 'Orange', distractors: ['Red',    'Yellow', 'Brown' ] },
+  { name: 'Yellow', distractors: ['Green',  'Orange', 'Gray'  ] },
+  { name: 'Purple', distractors: ['Blue',   'Red',    'Brown' ] },
+  { name: 'Brown',  distractors: ['Red',    'Green',  'Orange'] },
+  { name: 'Red',    distractors: ['Green',  'Brown',  'Orange'] },
+  { name: 'Green',  distractors: ['Red',    'Brown',  'Yellow'] },
+  { name: 'Blue',   distractors: ['Purple', 'Green',  'Gray'  ] },
+];
+
+// ─── RT State ─────────────────────────────────────────────────────────────────
+let state             = 'idle';
+let trialNum          = 0;
+let results           = [];
+let waitTimer         = null;
+let rtDisplayTimer    = null;
+let warningTimer      = null;
+let stimulusOnsetTime = null;
+
+// ─── Color State ──────────────────────────────────────────────────────────────
+let colorPhaseActive  = false;
+let colorTrialNum     = 0;
+let colorResults      = [];
+let colorFeedbackTimer = null;
+
+// ─── DOM refs ─────────────────────────────────────────────────────────────────
+const startScreen     = document.getElementById('start-screen');
+const startBtn        = document.getElementById('start-btn');
+const testArea        = document.getElementById('test-area');
+const phaseTransition = document.getElementById('phase-transition');
+const continueBtn     = document.getElementById('continue-btn');
+const colorTestArea   = document.getElementById('color-test-area');
+const colorStimulus   = document.getElementById('color-stimulus');
+const colorOptions    = document.getElementById('color-options');
+const colorFeedback   = document.getElementById('color-feedback');
+const resultsEl       = document.getElementById('results');
+const stimulus        = document.getElementById('stimulus');
+const ring            = document.getElementById('ring');
+const rtDisplay       = document.getElementById('rt-display');
+const rtValue         = document.getElementById('rt-value');
+const rtBand          = document.getElementById('rt-band');
+const warning         = document.getElementById('warning');
+const instruction     = document.getElementById('instruction');
+const progressBar     = document.getElementById('progress-bar');
+const phaseLabel      = document.getElementById('phase-label');
+const trialCounter    = document.getElementById('trial-counter');
+const retryBtn        = document.getElementById('retry-btn');
+const dbgState        = document.getElementById('dbg-state');
+const dbgLastRt       = document.getElementById('dbg-last-rt');
+const dbgPrecision    = document.getElementById('dbg-precision');
+
+// ─── Precision check ──────────────────────────────────────────────────────────
+(function checkPrecision() {
+  const samples = [];
+  for (let i = 0; i < 100; i++) {
+    const a = performance.now(), b = performance.now();
+    if (b > a) samples.push(b - a);
+  }
+  samples.sort((a, b) => a - b);
+  const min = samples[0]?.toFixed(4) ?? 'N/A';
+  const p50 = samples[Math.floor(samples.length * 0.5)]?.toFixed(4) ?? 'N/A';
+  dbgPrecision.textContent = `perf.now min Δ: ${min}ms | p50: ${p50}ms`;
+})();
+
+// ─── Event listeners ──────────────────────────────────────────────────────────
+startBtn.addEventListener('mousedown', startTest);
+retryBtn.addEventListener('mousedown', startTest);
+continueBtn.addEventListener('mousedown', startColorPhase);
+
+document.addEventListener('keydown', function(e) {
+  if (colorPhaseActive) return;
+  if (state === 'idle') {
+    if (e.key === ' ' || e.key === 'Enter') startTest();
+    return;
+  }
+  if (state === 'done') return;
+  handleInput(e.timeStamp);
+});
+
+document.addEventListener('mousedown', function(e) {
+  if (colorPhaseActive) return;
+  if (e.target === startBtn || e.target === retryBtn) return;
+  if (state === 'idle' || state === 'done') return;
+  handleInput(e.timeStamp);
+});
+
+// ─── RT: Core flow ────────────────────────────────────────────────────────────
+function startTest() {
+  trialNum = 0; results = []; state = 'idle';
+  colorPhaseActive = false; colorTrialNum = 0; colorResults = [];
+
+  startScreen.style.display      = 'none';
+  resultsEl.style.display        = 'none';
+  colorTestArea.style.display    = 'none';
+  phaseTransition.style.display  = 'none';
+  testArea.style.display         = 'block';
+
+  phaseLabel.textContent = 'Phase 1 — Reaction Time';
+  phaseLabel.style.opacity = '1';
+  trialCounter.style.opacity = '1';
+  progressBar.style.width = '0%';
+
+  nextTrial();
+}
+
+function nextTrial() {
+  hideStimulus(); hideRt(); hideWarning(); clearRtTimers();
+
+  trialNum++;
+  updateCounter();
+  progressBar.style.width = `${((trialNum - 1) / TOTAL_TRIALS) * 100}%`;
+
+  dbgState.textContent = `state: waiting (trial ${trialNum}/${TOTAL_TRIALS})`;
+
+  const waitMs = MIN_WAIT_MS + Math.random() * (MAX_WAIT_MS - MIN_WAIT_MS);
+  state = 'waiting';
+  instruction.textContent = 'Wait...';
+
+  waitTimer = setTimeout(showStimulus, waitMs);
+}
+
+function showStimulus() {
+  stimulusOnsetTime = performance.now();
+  state = 'stimulusVisible';
+  instruction.textContent = 'Click!';
+  stimulus.style.background = 'var(--signal-white)';
+  stimulus.style.opacity = '1';
+  dbgState.textContent = `state: stimulusVisible (onset: ${stimulusOnsetTime.toFixed(2)}ms)`;
+}
+
+function handleInput(eventTimestamp) {
+  if (state === 'waiting') {
+    clearRtTimers();
+    state = 'responded';
+    hideStimulus();
+    showWarning();
+    dbgState.textContent = 'state: early response';
+    warningTimer = setTimeout(function() {
+      if (trialNum < TOTAL_TRIALS) nextTrial(); else finishRtPhase();
+    }, WARNING_LIFETIME_MS);
+    return;
+  }
+  if (state !== 'stimulusVisible') return;
+
+  const rawRt = Math.round(performance.now() - stimulusOnsetTime);
+  state = 'responded';
+  clearRtTimers();
+  hideStimulus();
+  showRingFeedback();
+
+  results.push({ trial: trialNum, rawRt });
+  dbgLastRt.textContent = `last RT: ${rawRt}ms (raw) | ${rawRt - BROWSER_OFFSET_CORRECTION}ms (corrected)`;
+  dbgState.textContent  = `state: responded (rt=${rawRt}ms)`;
+
+  showRtDisplay(rawRt);
+  instruction.textContent = '';
+
+  rtDisplayTimer = setTimeout(function() {
+    hideRt(true);
+    setTimeout(function() {
+      if (trialNum < TOTAL_TRIALS) nextTrial(); else finishRtPhase();
+    }, RT_DISPLAY_FADE_MS);
+  }, RT_DISPLAY_LIFETIME_MS);
+}
+
+function finishRtPhase() {
+  state = 'done';
+  testArea.style.display = 'none';
+  trialCounter.style.opacity = '0';
+  progressBar.style.width = '50%';
+
+  // Show phase transition
+  phaseLabel.textContent = '';
+  phaseLabel.style.opacity = '0';
+  phaseTransition.style.display = 'flex';
+}
+
+// ─── RT: Visual helpers ───────────────────────────────────────────────────────
+function hideStimulus() { stimulus.style.opacity = '0'; }
+
+function showRtDisplay(rawRt) {
+  rtValue.textContent = String(rawRt);
+  rtValue.style.color =
+    rawRt < 200 ? 'var(--perf-fast)' :
+    rawRt > 400 ? 'var(--perf-slow)' : 'var(--signal-white)';
+  rtDisplay.style.opacity = '1';
+  rtDisplay.style.transform = 'translateX(-50%) scale(1.12)';
+  setTimeout(function() {
+    rtDisplay.style.transition = 'transform 80ms ease-out';
+    rtDisplay.style.transform  = 'translateX(-50%) scale(1)';
+  }, 0);
+  setTimeout(function() { rtDisplay.style.transition = ''; }, 80);
+}
+
+function hideRt(fade) {
+  if (fade) {
+    rtDisplay.style.transition = `opacity ${RT_DISPLAY_FADE_MS}ms linear`;
+    rtDisplay.style.opacity = '0';
+    setTimeout(function() { rtDisplay.style.transition = ''; }, RT_DISPLAY_FADE_MS + 50);
+  } else {
+    rtDisplay.style.opacity = '0';
+    rtDisplay.style.transition = '';
+  }
+}
+
+function showRingFeedback() {
+  ring.classList.remove('animate');
+  void ring.offsetWidth;
+  ring.classList.add('animate');
+}
+
+function showWarning()  { warning.style.opacity = '1'; }
+function hideWarning()  { warning.style.opacity = '0'; }
+
+function updateCounter() {
+  trialCounter.textContent = `${trialNum}/${TOTAL_TRIALS}`;
+}
+
+function clearRtTimers() {
+  clearTimeout(waitTimer);
+  clearTimeout(rtDisplayTimer);
+  clearTimeout(warningTimer);
+}
+
+// ─── Color Test: Core flow ────────────────────────────────────────────────────
+function startColorPhase() {
+  phaseTransition.style.display = 'none';
+  colorTestArea.style.display   = 'flex';
+  colorPhaseActive = true;
+  colorTrialNum    = 0;
+  colorResults     = [];
+
+  phaseLabel.textContent = 'Phase 2 — Color Vision';
+  phaseLabel.style.opacity = '1';
+  trialCounter.style.opacity = '1';
+
+  nextColorTrial();
+}
+
+function nextColorTrial() {
+  clearTimeout(colorFeedbackTimer);
+  colorFeedback.style.opacity = '0';
+
+  colorTrialNum++;
+  trialCounter.textContent = `${colorTrialNum}/${COLOR_TOTAL}`;
+  progressBar.style.width = `${50 + ((colorTrialNum - 1) / COLOR_TOTAL) * 50}%`;
+
+  const def = COLOR_TRIALS_DEF[colorTrialNum - 1];
+  colorStimulus.style.background = PALETTE[def.name];
+
+  // Build shuffled options: target + 3 distractors
+  const opts = [def.name, ...def.distractors];
+  shuffle(opts);
+
+  colorOptions.innerHTML = '';
+  opts.forEach(function(colorName) {
+    const btn = document.createElement('button');
+    btn.className = 'color-btn';
+    btn.innerHTML = `
+      <div class="swatch" style="background:${PALETTE[colorName]}"></div>
+      <div class="color-name">${colorName}</div>
+    `;
+    btn.addEventListener('mousedown', function() { handleColorChoice(def.name, colorName, btn); });
+    colorOptions.appendChild(btn);
+  });
+}
+
+function handleColorChoice(target, chosen, btn) {
+  // Disable all buttons immediately
+  Array.from(colorOptions.querySelectorAll('.color-btn')).forEach(function(b) {
+    b.style.pointerEvents = 'none';
+  });
+
+  const correct = chosen === target;
+  colorResults.push({ trial: colorTrialNum, target, chosen, correct });
+
+  if (correct) {
+    btn.classList.add('flash-correct');
+    colorFeedback.textContent = 'Correct';
+    colorFeedback.style.color = 'var(--correct-green)';
+  } else {
+    btn.classList.add('flash-wrong');
+    // Also highlight the correct button
+    Array.from(colorOptions.querySelectorAll('.color-btn')).forEach(function(b) {
+      if (b.querySelector('.color-name').textContent === target) {
+        b.classList.add('flash-correct');
+      }
+    });
+    colorFeedback.textContent = `It was ${target}`;
+    colorFeedback.style.color = 'var(--neutral-text)';
+  }
+  colorFeedback.style.opacity = '1';
+
+  colorFeedbackTimer = setTimeout(function() {
+    if (colorTrialNum < COLOR_TOTAL) {
+      nextColorTrial();
+    } else {
+      finishColorPhase();
+    }
+  }, 900);
+}
+
+function finishColorPhase() {
+  colorPhaseActive = false;
+  colorTestArea.style.display = 'none';
+  trialCounter.style.opacity = '0';
+  phaseLabel.style.opacity = '0';
+  progressBar.style.width = '100%';
+  showResults();
+}
+
+// ─── Results ──────────────────────────────────────────────────────────────────
+function showResults() {
+  // ── RT results ──
+  const validRt = results.filter(r => r.rawRt > 0);
+  let median = null, norm = null, percentileText = '--';
+
+  if (validRt.length > 0) {
+    const sorted = [...validRt].sort((a, b) => a.rawRt - b.rawRt);
+    const mid = Math.floor(sorted.length / 2);
+    median = sorted.length % 2 === 0
+      ? Math.round((sorted[mid - 1].rawRt + sorted[mid].rawRt) / 2)
+      : sorted[mid].rawRt;
+    const corrected = median - BROWSER_OFFSET_CORRECTION;
+    norm = NORMS.find(n => corrected <= n.max) || NORMS[NORMS.length - 1];
+    percentileText = norm.interp;
+
+    document.getElementById('res-median').textContent = `${median}`;
+    document.getElementById('res-median').style.color =
+      corrected < 200 ? 'var(--perf-fast)' :
+      corrected > 350 ? 'var(--perf-slow)' : 'var(--signal-white)';
+    document.getElementById('res-band').textContent = norm.labelText;
+    document.getElementById('res-percentile').textContent = percentileText;
+  } else {
+    document.getElementById('res-median').textContent = 'N/A';
+    document.getElementById('res-band').textContent = '--';
+    document.getElementById('res-percentile').textContent = 'No valid trials';
+  }
+
+  // ── Color results ──
+  const totalErrors     = colorResults.filter(r => !r.correct).length;
+  const accuracy        = Math.round(((COLOR_TOTAL - totalErrors) / COLOR_TOTAL) * 100);
+
+  // Classify errors
+  const redGreenErrors = colorResults.filter(r =>
+    !r.correct && (
+      ['Red','Green','Brown','Orange'].includes(r.target) &&
+      ['Red','Green','Brown','Orange'].includes(r.chosen)
+    )
+  ).length;
+
+  const blueYellowErrors = colorResults.filter(r =>
+    !r.correct && (
+      ['Blue','Yellow','Purple','Gray'].includes(r.target) &&
+      ['Blue','Yellow','Purple','Gray','Green'].includes(r.chosen)
+    )
+  ).length;
+
+  let colorBand, colorFinding;
+  if (totalErrors === 0) {
+    colorBand    = 'Normal';
+    colorFinding = 'No color confusion detected';
+  } else if (redGreenErrors >= 2 && redGreenErrors >= blueYellowErrors) {
+    colorBand    = 'Red-Green';
+    colorFinding = `${redGreenErrors} red-green confusion${redGreenErrors > 1 ? 's' : ''} — possible protanopia or deuteranopia`;
+  } else if (blueYellowErrors >= 2) {
+    colorBand    = 'Blue-Yellow';
+    colorFinding = `${blueYellowErrors} blue-yellow confusion${blueYellowErrors > 1 ? 's' : ''} — possible tritanopia`;
+  } else {
+    colorBand    = totalErrors === 1 ? 'Likely Normal' : 'Review';
+    colorFinding = `${totalErrors} error${totalErrors > 1 ? 's' : ''} — could be display or lighting`;
+  }
+
+  document.getElementById('res-color-score').textContent = `${accuracy}%`;
+  document.getElementById('res-color-score').style.color =
+    accuracy === 100 ? 'var(--correct-green)' :
+    accuracy < 70    ? 'var(--wrong-red)'     : 'var(--signal-white)';
+  document.getElementById('res-color-band').textContent    = colorBand;
+  document.getElementById('res-color-finding').textContent = colorFinding;
+
+  // ── Color trial breakdown ──
+  const trialListEl = document.getElementById('res-color-trials');
+  trialListEl.innerHTML = colorResults.map(function(r) {
+    const dot   = r.correct ? '#43a047' : '#e53935';
+    const label = r.correct
+      ? `Trial ${r.trial}: ${r.target} ✓`
+      : `Trial ${r.trial}: ${r.target} → saw ${r.chosen}`;
+    return `<div class="trial-row"><div class="trial-dot" style="background:${dot}"></div><span>${label}</span></div>`;
+  }).join('');
+
+  resultsEl.style.display = 'flex';
+
+  console.log('[PROTOTYPE] Full results:', {
+    rtMedian: median, rtBand: norm?.label,
+    colorAccuracy: accuracy, colorBand,
+    redGreenErrors, blueYellowErrors,
+    colorTrials: colorResults,
+  });
+}
+
+// ─── Util ─────────────────────────────────────────────────────────────────────
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+</script>
+</body>
+</html>
